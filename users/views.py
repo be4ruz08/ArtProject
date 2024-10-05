@@ -1,40 +1,41 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, FormView, TemplateView, RedirectView
 from .forms import UserRegisterForm
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login as auth_login
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            auth_login(request, user)
-            return redirect('home')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'users/register.html', {'form': form})
+class RegisterView(CreateView):
+    form_class = UserRegisterForm
+    template_name = 'users/register.html'
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return redirect(self.success_url)
 
 
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'users/login.html', {'form': form})
+class LoginView(FormView):
+    form_class = AuthenticationForm
+    template_name = 'users/login.html'
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        user = form.get_user()
+        login(self.request, user)
+        return redirect(self.success_url)
 
 
-def logout_view(request):
-    logout(request)
-    return redirect('home')
+class LogoutView(RedirectView):
+    url = reverse_lazy('home')
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super().get(request, *args, **kwargs)
 
 
-@login_required
-def profile(request):
-    return render(request, 'users/profile.html')
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/profile.html'

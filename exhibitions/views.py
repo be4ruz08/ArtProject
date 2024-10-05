@@ -1,12 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
 from .models import Exhibition
 
 
-def exhibition_list(request):
-    exhibitions = Exhibition.objects.all()
-    return render(request, 'exhibitions/exhibition_list.html', {'exhibitions': exhibitions})
+class ExhibitionListView(ListView):
+    model = Exhibition
+    template_name = 'exhibitions/exhibition_list.html'
+    context_object_name = 'exhibitions'
 
 
-def exhibition_detail(request, exhibition_id):
-    exhibition = get_object_or_404(Exhibition, id=exhibition_id)
-    return render(request, 'exhibitions/exhibition_detail.html', {'exhibition': exhibition})
+class ExhibitionDetailView(DetailView):
+    model = Exhibition
+    template_name = 'exhibitions/exhibition_detail.html'
+    context_object_name = 'exhibition'
+    pk_url_kwarg = 'exhibition_id'

@@ -1,14 +1,21 @@
-from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
 from .models import Artist
 from gallery.models import ArtWork
 
 
-def artist_list(request):
-    artists = Artist.objects.all()
-    return render(request, 'artists/artist_list.html', {'artists': artists})
+class ArtistListView(ListView):
+    model = Artist
+    template_name = 'artists/artist_list.html'
+    context_object_name = 'artists'
 
 
-def artist_detail(request, artist_id):
-    artist = get_object_or_404(Artist, id=artist_id)
-    artworks = ArtWork.objects.filter(artist=artist)
-    return render(request, 'artists/artist_detail.html', {'artist': artist, 'artworks': artworks})
+class ArtistDetailView(DetailView):
+    model = Artist
+    template_name = 'artists/artist_detail.html'
+    context_object_name = 'artist'
+    pk_url_kwarg = 'artist_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['artworks'] = ArtWork.objects.filter(artist=self.object)
+        return context
